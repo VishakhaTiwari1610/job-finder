@@ -92,11 +92,11 @@ export const login = async (req, res) => {
             profile: user.profile
         }
 
-        return res.status(200)
             .cookie("token", token, {
                 maxAge: 1 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
-                sameSite: 'strict'
+                sameSite: 'none',
+                secure: true
             })
             .json({
                 message: `Welcome back ${user.fullname}`,
@@ -109,7 +109,7 @@ export const login = async (req, res) => {
 }
 export const logout = async (req, res) => {
     try {
-        return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+        return res.status(200).cookie("token", "", { maxAge: 0, sameSite: 'none', secure: true }).json({
             message: "Logged out successfully.",
             success: true
         })
@@ -122,7 +122,7 @@ export const updateProfile = async (req, res) => {
         const { fullname, email, phoneNumber, bio, skills } = req.body;
         //cloudinary
         let cloudResponse;
-const file = req.file;
+        const file = req.file;
         if (file) {
             const fileUri = getDataUri(file);
 
