@@ -30,10 +30,14 @@ const corsOptions = {
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    optionsSuccessStatus: 200
 }
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));  // handle preflight for all routes
+
+
 
 const PORT = process.env.PORT || 3000
 
