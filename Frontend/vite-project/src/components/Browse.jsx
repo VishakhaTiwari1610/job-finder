@@ -8,7 +8,7 @@ import usegetAllJobs from '@/hooks/usegetAllJobs';
 
 const Browse = () => {
     usegetAllJobs();
-    const { allJobs } = useSelector(store => store.job);
+    const { allJobs , setsearchedQuery } = useSelector(store => store.job);
     const dispatch = useDispatch();
     useEffect(() => {
         return () => {
@@ -16,14 +16,19 @@ const Browse = () => {
         }
     }, [])
 
+    const filteredJobs = allJobs.filter((job) =>
+    job.title?.toLowerCase().includes(searchedQuery.toLowerCase()) ||
+    job.company?.name?.toLowerCase().includes(searchedQuery.toLowerCase())
+);
+
     return (
         <div>
             <Navbar />
             <div className='max-w-7xl mx-auto my-10'>
-                <h1>Search Results ({allJobs.length})</h1>
+                <h1>Search Results ({filteredJobs.length})</h1>
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4'>
-                    {allJobs.map((job) => (
+                    {filteredJobs.map((job) => (
                         <Job key={job._id} job={job} />
                     ))}
                 </div>
