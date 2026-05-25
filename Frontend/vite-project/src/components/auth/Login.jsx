@@ -52,11 +52,11 @@ const Login = () => {
 
     }
   }
-  useEffect(()=>{
+ useEffect(()=>{
     if(user){
       navigate("/");
     }
-  })
+  }, [])  
   return (
     <div>
       <Navbar />
