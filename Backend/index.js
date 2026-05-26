@@ -26,14 +26,24 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 
-const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-    optionsSuccessStatus: 200
-}
+const allowedOrigins = [
+  "https://job-finder-vishakhatiwari1610s-projects.vercel.app",
+  "https://job-finder-pi-ten.vercel.app",
+  "http://localhost:5173"
+];
 
+const corsOptions = {
+  origin: (origin, callback) =>{
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
 app.use(cors(corsOptions));
 app.options('/{*path}', cors(corsOptions));  // handle preflight for all routes
 
