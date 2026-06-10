@@ -1,5 +1,6 @@
 import { Application } from "../models/application.model.js";
 import { Job } from "../models/job.model.js";
+import logger from "../utils/logger.js";
 
 // APPLY JOB
 export const applyJobs = async (req, res) => {
@@ -22,6 +23,11 @@ export const applyJobs = async (req, res) => {
         });
 
         if (existingApplication) {
+            logger.warn({
+                event: "application_duplicate",
+                userId,
+                jobId
+            });
             return res.status(400).json({
                 message: "Already applied.",
                 success: false
@@ -32,6 +38,11 @@ export const applyJobs = async (req, res) => {
         const job = await Job.findById(jobId);
 
         if (!job) {
+            logger.warn({
+                event: "application_job_not_found",
+                userId,
+                jobId
+            });
             return res.status(404).json({
                 message: "Job not found.",
                 success: false
@@ -47,6 +58,14 @@ export const applyJobs = async (req, res) => {
         // push application id inside job
         job.applications.push(newApplication._id);
         await job.save();
+        logger.info({
+            event: "application_submitted",
+            userId,
+            jobId,
+            jobTitle: job.title,
+            applicationId: newApplication._id
+        });
+
 
         return res.status(201).json({
             message: "Job applied successfully",
@@ -54,7 +73,11 @@ export const applyJobs = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event:"apply_job_error",
+            error: error.message,
+            stack:error.stack
+        });
         return res.status(500).json({
             message: "Server error",
             success: false
@@ -83,14 +106,22 @@ export const getAppliedJobs = async (req, res) => {
                 success: false
             });
         }
-
+        logger.info({
+            event:"applied_jobs_fetched",
+            userId,
+            count:application.length
+        });
         return res.status(200).json({
             applications,
             success: true
         });
 
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event:"get_applied_jobs_error",
+            error: error.message,
+            stack:error.stack
+        });
         return res.status(500).json({
             message: "Server error",
             success: false
@@ -119,13 +150,24 @@ export const getApplicants = async (req, res) => {
             });
         }
 
+        logger.info({
+            event: "application_viewed",
+            jobId,
+            recruiterId: req.id,
+            applicationCount: job.application.length
+        });
+
         return res.status(200).json({
             job,
             success: true
         });
 
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event: "get_application_error",
+            error: error.message,
+            stack: error.stack
+        });
         return res.status(500).json({
             message: "Server error",
             success: false
@@ -161,13 +203,25 @@ export const updateStatus = async (req, res) => {
         application.status = status.toLowerCase();
         await application.save();
 
+        logger.info({
+            event:"application_status_updated",
+            applicationId,
+            recruiterId:req.id,
+            previousStatus,
+            newStatus: status.lowerCase()
+        })
+
         return res.status(200).json({
             message: "Status updated successfully.",
             success: true
         });
 
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event: "updated_status_error",
+            error: error.message,
+            stack: error.stack
+        })
         return res.status(500).json({
             message: "Server error",
             success: false

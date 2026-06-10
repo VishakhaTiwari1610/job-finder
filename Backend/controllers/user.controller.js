@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 import cloudinary from "../utils/cloudinary.js";
 import getDataUri from "../utils/datauri.js";
-
+import logger from "../utils/logger.js";
 // Register
 export const register = async (req, res) => {
     try {
@@ -49,6 +49,11 @@ export const register = async (req, res) => {
             },
         });
 
+        logger.info({
+            event: "user_registered",
+            email,
+            role
+        });
         return res.status(201).json({
             message: "Account created successfully",
             success: true,
@@ -78,6 +83,11 @@ export const login = async (req, res) => {
         let user = await User.findOne({ email });
 
         if (!user) {
+            logger.warn({
+                event: "user_login_failed",
+                email,
+                reason: "user_not_found"
+            });
             return res.status(400).json({
                 message: "Incorrect email or password.",
                 success: false,
@@ -90,6 +100,11 @@ export const login = async (req, res) => {
         );
 
         if (!isPasswordMatch) {
+            logger.warn({
+                event: "user_login_failed",
+                email,
+                reason: "incorrect_password"
+            });
             return res.status(400).json({
                 message: "Incorrect email or password.",
                 success: false,
@@ -97,6 +112,12 @@ export const login = async (req, res) => {
         }
 
         if (role !== user.role) {
+            logger.warn({
+                event: "user_login_failed",
+                email,
+                reason: "wrong_role",
+                attemptedRole: role
+            });
             return res.status(400).json({
                 message: "Account does not exist with current role.",
                 success: false,
@@ -114,7 +135,12 @@ export const login = async (req, res) => {
                 expiresIn: "1d",
             }
         );
-
+        logger.info({
+            event: "user_login_success",
+            userId: user._id,
+            email,
+            role
+        });
         user = {
             _id: user._id,
             fullname: user.fullname,

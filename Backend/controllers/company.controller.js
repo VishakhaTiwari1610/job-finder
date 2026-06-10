@@ -1,6 +1,7 @@
 import { Company } from "../models/company.model.js"
 import cloudinary from "../utils/cloudinary.js";
 import getDataUri from "../utils/datauri.js";
+import logger from "../utils/logger.js";
 export const registerCompany = async (req, res) => {
     try {
         const { companyName } = req.body;
@@ -12,6 +13,11 @@ export const registerCompany = async (req, res) => {
         }
         let company = await Company.findOne({ name: companyName })
         if (company) {
+            logger.warn({
+                event: "company_already_exists",
+                companyName,
+                userId: req.id
+            });
             return res.status(400).json({
                 message: "Company already registered",
                 success: false
@@ -21,14 +27,28 @@ export const registerCompany = async (req, res) => {
             name: companyName,
             userId: req.id
         });
+
+        logger.info({
+            event: "company_registered",
+            companyName,
+            companyId: company._id,
+            userId: req.id
+        });
         return res.status(201).json({
             message: "Company registered successfully",
             company,
             success: true
         })
     } catch (error) {
-        console.log
-            (error);
+        logger.info({
+            event: "registered_company_error",
+            error: error.message,
+            stack: error.stack
+        });
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false
+        });
     }
 }
 export const getCompany = async (req, res) => {
@@ -41,12 +61,25 @@ export const getCompany = async (req, res) => {
                 success: false
             })
         }
+        logger.info({
+            event: "companies_fetched",
+            userId,
+            count: companies.length
+        });
         return res.status(200).json({
             companies,
             success: true
         })
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event: "get_company_error",
+            error: error.message,
+            stack: error.stack
+        });
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false
+        });
     }
 }
 export const getCompanyById = async (req, res) => {
@@ -54,17 +87,34 @@ export const getCompanyById = async (req, res) => {
         const companyId = req.params.id;
         const company = await Company.findById(companyId);
         if (!company) {
+            logger.warn({
+                event: "company_not_found",
+                companyId
+            });
             return res.status(404).json({
                 message: "Company not found.",
                 success: false
             })
         }
+        logger.info({
+            event: "company_viewed",
+            companyId,
+            userId: req.id
+        });
         return res.status(200).json({
             company,
             success: true
         })
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event: "get_company_by_id_error",
+            error: error.message,
+            stack: error.stack
+        });
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false
+        });
     }
 }
 export const updateCompany = async (req, res) => {
@@ -107,6 +157,13 @@ export const updateCompany = async (req, res) => {
             });
         }
 
+        logger.info({
+            event: "company_updated",
+            companyId: req.params.id,
+            userId: req.id,
+            updatedFields: Object.keys(updateData).filter(k => updateData[k])
+        });
+
         return res.status(200).json({
             message: "Company information updated.",
             success: true,
@@ -114,7 +171,14 @@ export const updateCompany = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error);
+        logger.error({
+            event: "update_company_error",
+            error: error.message,
+            stack: error.stack
+        });
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false
+        });
     }
-
 }

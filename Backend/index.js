@@ -8,7 +8,7 @@ import userRoute from "./routes/user.route.js";
 import companyRoute from "./routes/company.route.js";
 import jobRoute from "./routes/job.route.js";
 import applicationRoute from "./routes/application.route.js";
-
+import requestLogger from "./middlewares/requestLogger.js"; 
 
 
 
@@ -29,7 +29,8 @@ app.use(cookieParser());
 const allowedOrigins = [
   "https://job-finder-vishakhatiwari1610s-projects.vercel.app",
   "https://job-finder-pi-ten.vercel.app",
-  "http://localhost:5173"
+  "http://localhost:5173",
+  "http://localhost:5174"
 ];
 
 const corsOptions = {
@@ -47,7 +48,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('/{*path}', cors(corsOptions));  // handle preflight for all routes
 
-
+app.use(requestLogger);
 
 const PORT = process.env.PORT || 3000
 
