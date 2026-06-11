@@ -154,7 +154,7 @@ export const getApplicants = async (req, res) => {
             event: "application_viewed",
             jobId,
             recruiterId: req.id,
-            applicationCount: job.application.length
+            applicationCount: job.applications.length
         });
 
         return res.status(200).json({
